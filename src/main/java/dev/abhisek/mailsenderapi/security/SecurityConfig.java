@@ -25,6 +25,8 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    private JwtAuthenticationEntryPoint entryPoint;
 
     @Autowired
     private CustomUserDetailService customUserDetailService;
@@ -38,6 +40,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/authenticate", "/api/v1/register").permitAll()
                 .requestMatchers("/api/v1/**").authenticated()
                 .and()
+                .exceptionHandling().authenticationEntryPoint(this.entryPoint)
+                .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
@@ -46,9 +50,23 @@ public class SecurityConfig {
                 .build();
     }
 
+//    I have used plaintext as password because I need to retrieve the actual password from database
+//            in mail section NoOpPasswordEncoder can be used, but it is deprecated.
+//    It is a complete security risk if database is compromised.
+//    If anyone knows how to solve this kindly contact me.
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new PasswordEncoder() {
+            @Override
+            public String encode(CharSequence rawPassword) {
+                return rawPassword.toString();
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                return rawPassword.toString().equals(encodedPassword);
+            }
+        };
     }
 
     @Bean

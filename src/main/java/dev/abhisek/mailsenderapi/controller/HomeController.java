@@ -54,7 +54,6 @@ public class HomeController {
                 );
 
         if (authentication.isAuthenticated()) {
-            System.out.println(jwtAuthRequest);
             return ResponseEntity.ok(new JwtAuthResponse(
                     this.jwtTokenHelper.generateToken(this.userDetailsService.loadUserByUsername(jwtAuthRequest.getUsername()))
             ));

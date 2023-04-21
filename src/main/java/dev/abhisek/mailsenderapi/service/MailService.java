@@ -21,13 +21,20 @@ public class MailService {
 
 
     public Optional<String> sendMail(String token, Mail mail) {
-        System.out.println("MailService.sendMail");
         User user = this.userService.getUserByJwtToken(token);
-        this.mailRepository.save(mail);
-        return this.mailer.sendMail(mail, user);
+        mail.setUser(user);
+        try {
+            this.mailRepository.save(mail);
+            return this.mailer.sendMail(mail, user);
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            return Optional.empty();
+        }
     }
 
     public List<Mail> getAllMail(String token) {
-        return this.mailRepository.findAllByUser(this.userService.getUserByJwtToken(token));
+        return this.mailRepository.findByUser(this.userService.getUserByJwtToken(token));
     }
 }

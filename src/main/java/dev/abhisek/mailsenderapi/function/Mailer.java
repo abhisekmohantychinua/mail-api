@@ -29,7 +29,7 @@ public class Mailer {
         properties.put("mail.smtp.auth", "true");
 
 
-        var session = Session.getInstance(properties, new Authenticator() {
+        Session session = Session.getInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(user.getEmail(), user.getPassword());
@@ -53,8 +53,8 @@ public class Mailer {
             mimeMessage.setFrom(user.getEmail());
             mimeMessage.setSubject(mail.getSubject());
 
-            var multipart = new MimeMultipart();
-            var text = new MimeBodyPart();
+            MimeMultipart multipart = new MimeMultipart();
+            MimeBodyPart text = new MimeBodyPart();
             text.setText(mail.getMessage());
 
             multipart.addBodyPart(text);
