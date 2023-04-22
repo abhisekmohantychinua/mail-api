@@ -30,9 +30,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Get token from request
         String token = getTokenFromRequest(request);
+        System.out.println("Token :" + token);
 
         // Validate token using JWT provider
-        if(token != null && jwtTokenHelper.validateToken(token)) {
+        if (token != null && jwtTokenHelper.validateToken(token)) {
 
             // Get username from token
             String username = jwtTokenHelper.getUsernameFromToken(token);
@@ -40,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Get user details
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            // Create authentication object
+            // Create an authentication object
             var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -60,8 +61,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Bearer {JWT}
 
         // Check whether it starts with `Bearer ` or not
-        if(StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")){
-            return authHeader.substring(7);
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            return authHeader.split(" ")[1].trim();
         }
 
         return null;

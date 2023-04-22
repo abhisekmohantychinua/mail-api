@@ -1,56 +1,38 @@
 package dev.abhisek.mailsenderapi.security;
 
-import ch.qos.logback.core.encoder.EchoEncoder;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.io.Encoder;
-import io.jsonwebtoken.io.EncodingException;
+import io.jsonwebtoken.io.DecodingException;
 import io.jsonwebtoken.security.Keys;
-import org.apache.logging.log4j.util.Base64Util;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 @Component
 public class JwtTokenHelper {
     // Jwt Secret
-    private String jwtSecret="sIoVC8OFOgmxbk9XRYtY2zMKXuYXBGL2d3x1IV37";
+    @Value("${env.JWT_SECRET}")
+    private String SECRET;
 
     // Jwt Expiration in millis
-    private Long jwtExpiration = 60000L;
+    @Value("${env.JWT_TOKEN_VALIDITY}")
+    private Long JWT_TOKEN_VALIDITY;
+
 
     private Claims parseToken(String token) {
+        System.out.println("Secret : " + this.SECRET);
+        System.out.println("Validity : " + this.JWT_TOKEN_VALIDITY);
         // Create JwtParser
-        JwtParser jwtParser = Jwts.parserBuilder()
-                .setSigningKey(jwtSecret.getBytes())
-                .build();
-
-        try {
-            return jwtParser.parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            System.out.println(e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            System.out.println(e.getMessage());
-        } catch (MalformedJwtException e) {
-            System.out.println(e.getMessage());
-        } catch (SignatureException e) {
-            System.out.println(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return null;
+        Key key = Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
+
     public boolean validateToken(String token) {
+        Key key = Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
         return parseToken(token) != null;
     }
 
@@ -59,7 +41,7 @@ public class JwtTokenHelper {
         Claims claims = parseToken(token);
 
         // Extract subject
-        if(claims != null){
+        if (claims != null) {
             return claims.getSubject();
         }
 
@@ -67,18 +49,19 @@ public class JwtTokenHelper {
     }
 
     public String generateToken(String username) {
-        // Create signing key
-        Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-
+        System.out.println("Secret : " + this.SECRET);
+        System.out.println("Validity : " + this.JWT_TOKEN_VALIDITY);
         // Generate token
+        Key key = Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
         var currentDate = new Date();
-        var expiration = new Date(currentDate.getTime() + jwtExpiration);
+        var expiration = new Date(currentDate.getTime() + JWT_TOKEN_VALIDITY);
 
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(currentDate)
                 .setExpiration(expiration)
                 .signWith(key)
-                .compact();
+                .compact()
+                .replace("+", "-").replace("/", "_").replace("=", "");
     }
 }
