@@ -22,6 +22,7 @@ public class MailService {
 
     public Optional<String> sendMail(String token, Mail mail) {
         User user = this.userService.getUserByJwtToken(token);
+        System.out.println("MailService : "+user);
         mail.setUser(user);
         try {
             this.mailRepository.save(mail);

@@ -1,5 +1,6 @@
 package dev.abhisek.mailsenderapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +11,6 @@ import java.util.List;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class Mail {
     @Id
@@ -22,7 +22,7 @@ public class Mail {
     private String message;
     @ElementCollection
     private List<String> paths = new ArrayList<>();
-
+    @JsonIgnore
     @ManyToOne
     private User user;
 

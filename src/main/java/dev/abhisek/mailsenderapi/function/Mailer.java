@@ -2,12 +2,8 @@ package dev.abhisek.mailsenderapi.function;
 
 import dev.abhisek.mailsenderapi.entity.Mail;
 import dev.abhisek.mailsenderapi.entity.User;
-import dev.abhisek.mailsenderapi.security.JwtTokenHelper;
-import dev.abhisek.mailsenderapi.service.UserService;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -27,6 +23,8 @@ public class Mailer {
         properties.put("mail.smtp.port", "465");
         properties.put("mail.smtp.ssl.enable", "true");
         properties.put("mail.smtp.auth", "true");
+
+        System.out.println("Mailer : " + user);
 
 
         Session session = Session.getInstance(properties, new Authenticator() {
