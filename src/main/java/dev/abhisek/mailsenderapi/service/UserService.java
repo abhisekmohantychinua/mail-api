@@ -2,24 +2,26 @@ package dev.abhisek.mailsenderapi.service;
 
 import dev.abhisek.mailsenderapi.entity.User;
 import dev.abhisek.mailsenderapi.repository.UserRepository;
-import dev.abhisek.mailsenderapi.security.JwtTokenHelper;
+import dev.abhisek.mailsenderapi.utility.JwtUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class UserService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private JwtTokenHelper jwtTokenHelper;
+    private JwtUtility jwtUtility;
 
-    public User addUser(User user) {
-        return this.userRepository.save(user);
+    public void addUser(User user) {
+        this.userRepository.save(user);
     }
 
 
-    public User getUserByJwtToken(String token) {
-        String email = this.jwtTokenHelper.getUsernameFromToken(token);
+    public Optional<User> getUserByJwtToken(String token) {
+        String email = this.jwtUtility.extractUsername(token);
         System.out.println("Email : " + email);
         return this.userRepository.findUserByEmail(email);
     }

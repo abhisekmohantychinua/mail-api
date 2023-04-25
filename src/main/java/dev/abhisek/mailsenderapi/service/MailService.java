@@ -21,7 +21,7 @@ public class MailService {
 
 
     public Optional<String> sendMail(String token, Mail mail) {
-        User user = this.userService.getUserByJwtToken(token);
+        User user = this.userService.getUserByJwtToken(token).get();
         System.out.println("MailService : "+user);
         mail.setUser(user);
         try {
@@ -36,6 +36,6 @@ public class MailService {
     }
 
     public List<Mail> getAllMail(String token) {
-        return this.mailRepository.findByUser(this.userService.getUserByJwtToken(token));
+        return this.mailRepository.findByUser(this.userService.getUserByJwtToken(token).get());
     }
 }

@@ -1,5 +1,6 @@
 package dev.abhisek.mailsenderapi.security;
 
+import dev.abhisek.mailsenderapi.utility.JwtUtility;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,49 +25,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
     @Autowired
-    private JwtTokenHelper jwtTokenHelper;
+    private JwtUtility jwtUtility;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        // Extract authentication header
+        var authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        // Get token from request
-        String token = getTokenFromRequest(request);
-        System.out.println("Token :" + token);
+        String token = null;
+        String username = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            username = jwtUtility.extractUsername(token);
+        }
 
-        // Validate token using JWT provider
-        if (token != null && jwtTokenHelper.validateToken(token)) {
-
-            // Get username from token
-            String username = jwtTokenHelper.getUsernameFromToken(token);
-
-            // Get user details
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            // Create an authentication object
-            var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            // Set user to spring context
-            SecurityContextHolder.getContext()
-                    .setAuthentication(auth);
-
+            if (jwtUtility.validateToken(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
-        // Extract authentication header
-        var authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        // Bearer {JWT}
-
-        // Check whether it starts with `Bearer ` or not
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-            return authHeader.split(" ")[1].trim();
-        }
-
-        return null;
-    }
 
 }
